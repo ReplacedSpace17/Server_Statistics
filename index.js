@@ -85,10 +85,25 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
+
 const serverStats = new Server();
 
 app.use(express.static('public')); // Para servir archivos estáticos
-app.use(cors());
+app.use(cors({
+    origin: '*',  // Permitir todos los orígenes
+    methods: ['GET', 'POST'],
+    credentials: true
+}));
+
+
+
+io.on('connection', (socket) => {
+    console.log('Un cliente se ha conectado');
+    socket.on('disconnect', () => {
+        console.log('Un cliente se ha desconectado');
+    });
+});
+
 
 // Endpoint para servir la página web
 app.get('/server1/stats', (req, res) => {
@@ -103,6 +118,7 @@ setInterval(async () => {
   io.emit('serverStats', serverStats);
   
   // Mostrar estadísticas en la consola
+  /*
   console.log('--- Estadísticas del Servidor ---');
   console.log(`Uso de CPU: ${serverStats.cpuUsage * 100}%`);
   console.log(`Memoria Libre: ${serverStats.freeMem} MB`);
@@ -115,6 +131,7 @@ setInterval(async () => {
   console.log('Información de GPU:', serverStats.gpuInfo);
   console.log('Top 5 Procesos:', serverStats.topProcesses);
   console.log('----------------------------------');
+    */
 }, 2000); // Actualizar cada 2 segundos
 
 // Iniciar el servidor
