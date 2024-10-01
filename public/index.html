@@ -112,8 +112,7 @@
         }
     </style>
     <script>
-        const socket = io('https://segubackend.com/monitoring'); // Asegúrate de que coincida
-
+        const socket = io();
 
         socket.on('serverStats', (stats) => {
             document.getElementById('cpuUsage').innerText = (stats.cpuUsage * 100).toFixed(2) + '%';

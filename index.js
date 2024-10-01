@@ -87,6 +87,7 @@ const io = socketIo(server);
 const serverStats = new Server();
 
 app.use(express.static('public')); // Para servir archivos estáticos
+app.use(cors());
 
 // Endpoint para servir la página web
 app.get('/server1/stats', (req, res) => {
