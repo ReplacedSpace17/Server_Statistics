@@ -3,6 +3,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const os = require('os-utils');
 const si = require('systeminformation');
+const cors = require('cors');
 
 class Server {
   constructor() {
