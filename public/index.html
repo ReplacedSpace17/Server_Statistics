@@ -111,43 +111,51 @@
             }
         }
     </style>
-    <script>
-        const socket = io();
+<script>
+    // Conectar al socket
+    const socket = io('https://segubackend.com/monitoring/'); // Cambia 'localhost:9000' por la dirección IP y puerto si es necesario
 
-        socket.on('serverStats', (stats) => {
-            document.getElementById('cpuUsage').innerText = (stats.cpuUsage * 100).toFixed(2) + '%';
-            document.getElementById('cpuFill').style.width = (stats.cpuUsage * 100).toFixed(2) + '%';
+    socket.on('serverStats', (stats) => {
+        // Actualiza el uso de CPU
+        document.getElementById('cpuUsage').innerText = (stats.cpuUsage * 100).toFixed(2) + '%';
+        document.getElementById('cpuFill').style.width = (stats.cpuUsage * 100).toFixed(2) + '%';
 
-            const usedMemory = (stats.totalMem - stats.freeMem).toFixed(2);
-            const totalMemory = stats.totalMem.toFixed(2);
-            document.getElementById('memoryUsage').innerText = `${usedMemory} MB / ${totalMemory} MB`;
-            document.getElementById('memoryBarFill').style.width = (usedMemory / totalMemory * 100) + '%';
+        // Actualiza el uso de memoria
+        const usedMemory = (stats.totalMem - stats.freeMem).toFixed(2);
+        const totalMemory = stats.totalMem.toFixed(2);
+        document.getElementById('memoryUsage').innerText = `${usedMemory} MB / ${totalMemory} MB`;
+        document.getElementById('memoryBarFill').style.width = (usedMemory / totalMemory * 100) + '%';
 
-            const usedDisk = stats.diskUsed.toFixed(2);
-            const totalDisk = stats.diskTotal.toFixed(2);
-            document.getElementById('diskUsage').innerText = `${usedDisk} GB / ${totalDisk} GB`;
-            document.getElementById('diskBarFill').style.width = (usedDisk / totalDisk * 100) + '%';
+        // Actualiza el uso del disco
+        const usedDisk = stats.diskUsed.toFixed(2);
+        const totalDisk = stats.diskTotal.toFixed(2);
+        document.getElementById('diskUsage').innerText = `${usedDisk} GB / ${totalDisk} GB`;
+        document.getElementById('diskBarFill').style.width = (usedDisk / totalDisk * 100) + '%';
 
-            document.getElementById('networkRX').innerText = (stats.networkSpeed.rx / 1024).toFixed(2) + ' KB/s';
-            document.getElementById('networkTX').innerText = (stats.networkSpeed.tx / 1024).toFixed(2) + ' KB/s';
+        // Actualiza la velocidad de red
+        document.getElementById('networkRX').innerText = (stats.networkSpeed.rx / 1024).toFixed(2) + ' KB/s';
+        document.getElementById('networkTX').innerText = (stats.networkSpeed.tx / 1024).toFixed(2) + ' KB/s';
 
-            const processesList = document.getElementById('topProcesses');
-            processesList.innerHTML = ''; // Limpiar lista actual
-            stats.topProcesses.forEach(proc => {
-                const listItem = document.createElement('li');
-                listItem.innerText = `${proc.name} (PID: ${proc.pid}) - CPU: ${proc.cpu}% - Memory: ${proc.mem} MB`;
-                processesList.appendChild(listItem);
-            });
-
-            const gpuList = document.getElementById('gpuInfo');
-            gpuList.innerHTML = ''; // Limpiar lista actual
-            stats.gpuInfo.forEach((gpu, index) => {
-                const listItem = document.createElement('li');
-                listItem.innerText = `GPU ${index + 1}: ${gpu.model} - Vendor: ${gpu.vendor} - Memory: ${gpu.memoryTotal} - Temperature: ${gpu.temperature}`;
-                gpuList.appendChild(listItem);
-            });
+        // Actualiza los procesos
+        const processesList = document.getElementById('topProcesses');
+        processesList.innerHTML = ''; // Limpiar lista actual
+        stats.topProcesses.forEach(proc => {
+            const listItem = document.createElement('li');
+            listItem.innerText = `${proc.name} (PID: ${proc.pid}) - CPU: ${proc.cpu}% - Memory: ${proc.mem} MB`;
+            processesList.appendChild(listItem);
         });
-    </script>
+
+        // Actualiza la información de la GPU
+        const gpuList = document.getElementById('gpuInfo');
+        gpuList.innerHTML = ''; // Limpiar lista actual
+        stats.gpuInfo.forEach((gpu, index) => {
+            const listItem = document.createElement('li');
+            listItem.innerText = `GPU ${index + 1}: ${gpu.model} - Vendor: ${gpu.vendor} - Memory: ${gpu.memoryTotal} - Temperature: ${gpu.temperature}`;
+            gpuList.appendChild(listItem);
+        });
+    });
+</script>
+
 </head>
 <body>
     <div class="container">
