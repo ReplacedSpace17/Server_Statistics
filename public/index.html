@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Stats</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #444;
+            border-bottom: 2px solid #76c7c0;
+            padding-bottom: 10px;
+        }
+
+        p {
+            color: #555;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+
+        .gauge {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .gauge-fill {
+            height: 100%;
+            background: #76c7c0;
+            transition: width 0.5s ease-in-out;
+            border-radius: 15px;
+            width: 0; /* Se ajustará mediante JavaScript */
+        }
+
+        .bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background-color: #76c7c0;
+            border-radius: 10px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0; /* Se ajustará mediante JavaScript */
+            transition: width 0.5s ease-in-out;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 5px 0;
+            border-bottom: 1px solid #ccc;
+        }
+
+        li:last-child {
+            border: none; /* Eliminar borde del último elemento */
+        }
+
+        h3 {
+            color: #555;
+            margin: 5px 0;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+        }
+    </style>
+    <script>
+        const socket = io();
+
+        socket.on('serverStats', (stats) => {
+            document.getElementById('cpuUsage').innerText = (stats.cpuUsage * 100).toFixed(2) + '%';
+            document.getElementById('cpuFill').style.width = (stats.cpuUsage * 100).toFixed(2) + '%';
+
+            const usedMemory = (stats.totalMem - stats.freeMem).toFixed(2);
+            const totalMemory = stats.totalMem.toFixed(2);
+            document.getElementById('memoryUsage').innerText = `${usedMemory} MB / ${totalMemory} MB`;
+            document.getElementById('memoryBarFill').style.width = (usedMemory / totalMemory * 100) + '%';
+
+            const usedDisk = stats.diskUsed.toFixed(2);
+            const totalDisk = stats.diskTotal.toFixed(2);
+            document.getElementById('diskUsage').innerText = `${usedDisk} GB / ${totalDisk} GB`;
+            document.getElementById('diskBarFill').style.width = (usedDisk / totalDisk * 100) + '%';
+
+            document.getElementById('networkRX').innerText = (stats.networkSpeed.rx / 1024).toFixed(2) + ' KB/s';
+            document.getElementById('networkTX').innerText = (stats.networkSpeed.tx / 1024).toFixed(2) + ' KB/s';
+
+            const processesList = document.getElementById('topProcesses');
+            processesList.innerHTML = ''; // Limpiar lista actual
+            stats.topProcesses.forEach(proc => {
+                const listItem = document.createElement('li');
+                listItem.innerText = `${proc.name} (PID: ${proc.pid}) - CPU: ${proc.cpu}% - Memory: ${proc.mem} MB`;
+                processesList.appendChild(listItem);
+            });
+
+            const gpuList = document.getElementById('gpuInfo');
+            gpuList.innerHTML = ''; // Limpiar lista actual
+            stats.gpuInfo.forEach((gpu, index) => {
+                const listItem = document.createElement('li');
+                listItem.innerText = `GPU ${index + 1}: ${gpu.model} - Vendor: ${gpu.vendor} - Memory: ${gpu.memoryTotal} - Temperature: ${gpu.temperature}`;
+                gpuList.appendChild(listItem);
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Server Statistics</h1>
+
+        <div class="card">
+            <h2>CPU Usage</h2>
+            <div class="gauge" id="cpuGauge">
+                <div class="gauge-fill" id="cpuFill"></div>
+            </div>
+            <h3 id="cpuUsage">0%</h3>
+            <h4>Top Processes:</h4>
+            <ul id="topProcesses"></ul>
+        </div>
+
+        <div class="card">
+            <h2>GPU Information</h2>
+            <ul id="gpuInfo"></ul>
+        </div>
+
+        <div class="card">
+            <h2>Memory Usage</h2>
+            <h3 id="memoryUsage">0 MB / 0 MB</h3>
+            <div class="bar">
+                <div class="bar-fill" id="memoryBarFill"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Disk Usage</h2>
+            <h3 id="diskUsage">0 GB / 0 GB</h3>
+            <div class="bar">
+                <div class="bar-fill" id="diskBarFill"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Network Stats</h2>
+            <h3>RX: <span id="networkRX">0 KB/s</span></h3>
+            <h3>TX: <span id="networkTX">0 KB/s</span></h3>
+        </div>
+    </div>
+</body>
+</html>
