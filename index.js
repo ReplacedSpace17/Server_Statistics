@@ -83,7 +83,13 @@ class Server {
 // Inicializar el servidor Express y Socket.IO
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, {
+    cors: {
+        origin: "https://segubackend.com",
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
 
 
 const serverStats = new Server();
