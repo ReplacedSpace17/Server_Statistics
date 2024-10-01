@@ -113,7 +113,8 @@
     </style>
 <script>
     // Conectar al socket
-    const socket = io('https://segubackend.com/monitoring/'); // Cambia 'localhost:9000' por la dirección IP y puerto si es necesario
+    const socket = io('https://segubackend.com/monitoring/'); 
+    //const socket = io('http://localhost:9000'); 
 
     socket.on('serverStats', (stats) => {
         // Actualiza el uso de CPU
