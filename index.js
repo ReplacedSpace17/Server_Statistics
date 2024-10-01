@@ -96,7 +96,23 @@ app.get('/server1/stats', (req, res) => {
 // Enviar estadísticas al cliente cada 2 segundos
 setInterval(async () => {
   await serverStats.updateStats();
-  io.emit('serverStats', serverStats); // Emitir las estadísticas al cliente
+  
+  // Emitir las estadísticas al cliente
+  io.emit('serverStats', serverStats);
+  
+  // Mostrar estadísticas en la consola
+  console.log('--- Estadísticas del Servidor ---');
+  console.log(`Uso de CPU: ${serverStats.cpuUsage * 100}%`);
+  console.log(`Memoria Libre: ${serverStats.freeMem} MB`);
+  console.log(`Memoria Total: ${serverStats.totalMem} MB`);
+  console.log(`Espacio en Disco Libre: ${serverStats.diskFree} GB`);
+  console.log(`Espacio en Disco Total: ${serverStats.diskTotal} GB`);
+  console.log(`Espacio en Disco Usado: ${serverStats.diskUsed} GB`);
+  console.log(`Velocidad de Red (Rx): ${serverStats.networkSpeed.rx} Bytes/s`);
+  console.log(`Velocidad de Red (Tx): ${serverStats.networkSpeed.tx} Bytes/s`);
+  console.log('Información de GPU:', serverStats.gpuInfo);
+  console.log('Top 5 Procesos:', serverStats.topProcesses);
+  console.log('----------------------------------');
 }, 2000); // Actualizar cada 2 segundos
 
 // Iniciar el servidor
