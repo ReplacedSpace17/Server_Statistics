@@ -142,7 +142,7 @@ io.on('connection', (socket) => {
 
 // Página de login
 app.get('/', (req, res) => {
-  res.redirect('/stats');
+  res.send('Hola, bienvenido a la página de login');
   /*
   if (req.session.loggedIn) {
     res.redirect('/stats');
