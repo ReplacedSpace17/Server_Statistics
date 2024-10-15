@@ -170,11 +170,9 @@ app.post('/login', (req, res) => {
 
 // Endpoint protegido que muestra las estadísticas
 app.get('/stats', (req, res) => {
-  if (req.session.loggedIn) {
+  
     res.sendFile(__dirname + '/public/index.html');
-  } else {
-    res.redirect('/');
-  }
+  
 });
 
 // Enviar estadísticas al cliente cada 2 segundos
