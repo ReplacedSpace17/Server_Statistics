@@ -128,7 +128,7 @@ app.use(expressCspHeader({
 // Configuración de CORS
 const corsOptions = {
   origin: ['https://segucom.mx', 'http://localhost:3001', 'http://localhost:5500', 'http://127.0.0.1:5500', '*', 'http://192.168.1.68/', 'https://localhost:3000',
-    'https://:192.168.1.90/', 'https://segubackend.com:3000', 'https://segubackend.com'],
+    'https://:192.168.1.90/', 'https://segubackend.com:3000', 'https://segubackend.com', 'https://segubackend.com/monitoring/'],
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
