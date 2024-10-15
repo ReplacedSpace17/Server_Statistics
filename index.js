@@ -142,11 +142,14 @@ io.on('connection', (socket) => {
 
 // Página de login
 app.get('/', (req, res) => {
+  res.redirect('/stats');
+  /*
   if (req.session.loggedIn) {
     res.redirect('/stats');
   } else {
     res.sendFile(__dirname + '/public/login.html');
   }
+    */
 });
 
 // Endpoint para manejar login
