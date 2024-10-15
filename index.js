@@ -138,6 +138,13 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('Un cliente se ha desconectado');
   });
+
+
+  // Enviar estadísticas al cliente cada 2 segundos
+setInterval(async () => {
+  await serverStats.updateStats();
+  io.emit('serverStats', serverStats);
+}, 2000);
 });
 
 // Página de login
@@ -175,11 +182,7 @@ app.get('/stats', (req, res) => {
   
 });
 
-// Enviar estadísticas al cliente cada 2 segundos
-setInterval(async () => {
-  await serverStats.updateStats();
-  io.emit('serverStats', serverStats);
-}, 2000);
+
 
 const PORT = 9000;
 server.listen(PORT, () => {

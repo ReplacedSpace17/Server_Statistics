@@ -114,11 +114,35 @@
 <script>
     // Conectar al socket
     //const socket = io('https://segubackend.com/monitoring/'); 
-    const backend = 'https://segubackend.com';
-    //const backend = 'http://localhost:9000';
+    //const backend = 'https://segubackend.com';
+    const backend = 'http://localhost:9000';
     const socket = io(backend, {
       transports: ['websocket'],
       autoConnect: true,
+    });
+
+    socket.on('connect', () => {
+        console.log(`Conectado al servidor: ${backend}`);
+    });
+    
+    socket.on('disconnect', (reason) => {
+        console.log(`Desconectado del servidor: ${reason}`);
+    });
+
+    socket.on('connect_error', (error) => {
+        console.error(`Error al conectar: ${error.message}`);
+    });
+
+    socket.on('reconnect_attempt', () => {
+        console.log('Intentando reconectar...');
+    });
+
+    socket.on('reconnect', (attemptNumber) => {
+        console.log(`Reconexion exitosa en el intento: ${attemptNumber}`);
+    });
+
+    socket.on('reconnect_error', (error) => {
+        console.error(`Error al reconectar: ${error.message}`);
     });
 
     socket.on('serverStats', (stats) => {
