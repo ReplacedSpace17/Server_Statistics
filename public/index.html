@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Server Stats</title>
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -113,8 +113,13 @@
     </style>
 <script>
     // Conectar al socket
-    const socket = io('https://segubackend.com/monitoring/'); 
-    //const socket = io('http://localhost:9000'); 
+    //const socket = io('https://segubackend.com/monitoring/'); 
+    const backend = 'https://segubackend.com/monitoring/';
+    //const backend = 'http://localhost:9000';
+    const socket = io(backend, {
+      transports: ['websocket'],
+      autoConnect: true,
+    });
 
     socket.on('serverStats', (stats) => {
         // Actualiza el uso de CPU
@@ -198,6 +203,14 @@
             <h3>RX: <span id="networkRX">0 KB/s</span></h3>
             <h3>TX: <span id="networkTX">0 KB/s</span></h3>
         </div>
+        <div class="card">
+            <h2>Server Control</h2>
+            <button id="restartServer">Reiniciar servidor</button>
+            <button id="restartServer">Reiniciar Segucom Mensajería Service</button>
+            <button id="restartServer">Reiniciar Segucom backend</button>
+            <button id="restartServer">Reiniciar MySQL service</button>
+        </div>
+        
     </div>
 </body>
 </html>
