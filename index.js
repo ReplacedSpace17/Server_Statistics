@@ -133,11 +133,24 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+const monitoringNamespace = io.of('/monitoring');
+
+monitoringNamespace.on('connection', (socket) => {
+    console.log('New connection to /monitoring');
+      // Enviar estadísticas al cliente cada 2 segundos
+setInterval(async () => {
+  await serverStats.updateStats();
+  monitoringNamespace.emit('serverStats', serverStats);
+}, 2000);
+    // Maneja eventos aquí
+});
+
 io.on('connection', (socket) => {
   console.log('Un cliente se ha conectado');
   socket.on('disconnect', () => {
     console.log('Un cliente se ha desconectado');
   });
+
 
 
   // Enviar estadísticas al cliente cada 2 segundos
