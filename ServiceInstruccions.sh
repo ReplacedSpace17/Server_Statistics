@@ -30,3 +30,30 @@ sudo systemctl start serverStatistics
 sudo systemctl stop serverStatistics
 sudo systemctl restart serverStatistics
 sudo systemctl status serverStatistics
+
+
+
+
+
+sudo visudo
+rs17 ALL=(ALL) NOPASSWD: /sbin/reboot
+rs17 ALL=(ALL) NOPASSWD: /bin/systemctl restart backendsegucom.service
+rs17 ALL=(ALL) NOPASSWD: /bin/systemctl restart segucomunication
+rs17 ALL=(ALL) NOPASSWD: /bin/systemctl restart nginx
+rs17 ALL=(ALL) NOPASSWD: /bin/systemctl restart mysqld.service
+rs17 ALL=(ALL) NOPASSWD: /bin/systemctl status backendsegucom.service
+rs17 ALL=(ALL) NOPASSWD: /bin/systemctl status segucomunication
+rs17 ALL=(ALL) NOPASSWD: /bin/systemctl status nginx
+rs17 ALL=(ALL) NOPASSWD: /bin/systemctl status mysqld.service
+
+//gets
+http://localhost:9000/service/confirm/status/segucom-backend
+http://localhost:9000/service/confirm/status/segucomunications
+http://localhost:9000/service/confirm/status/nginx
+http://localhost:9000/service/confirm/status/database
+
+//post
+http://localhost:9000/service/confirm/restart/segucom-backend
+http://localhost:9000/service/confirm/restart/segucomunications
+http://localhost:9000/service/confirm/restart/nginx
+http://localhost:9000/service/confirm/restart/database

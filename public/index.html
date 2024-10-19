@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Server Stats</title>
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,7 +13,63 @@
             padding: 20px;
             background-color: #f4f4f4;
         }
+        .card h2 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Estilo para el texto de status */
+.card p {
+    font-size: 16px;
+    color: #555;
+    margin: 10px 0;
+}
+
+/* Estilos para los botones */
+.card button {
+    background-color: #007bff;      /* Color azul para el botón */
+    color: white;                   /* Texto en blanco */
+    border: none;                   /* Sin bordes */
+    padding: 10px 20px;             /* Espaciado interno */
+    border-radius: 5px;             /* Bordes redondeados */
+    font-size: 16px;                /* Tamaño de fuente */
+    cursor: pointer;                /* Cursor de puntero al pasar el mouse */
+    transition: background-color 0.3s, box-shadow 0.3s; /* Transición suave para hover */
+    margin-top: 10px;               /* Separación superior */
+    width: 100%;                    /* Botones con ancho completo */
+    max-width: 250px;               /* Limita el ancho máximo */
+}
+
+/* Efecto hover para los botones */
+.card button:hover {
+    background-color: #0056b3;      /* Oscurece el color en hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Sombra más fuerte en hover */
+}
+
+/* Estilo para botón al estar activo */
+.card button:active {
+    background-color: #004085;      /* Aún más oscuro cuando está activo */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); /* Sombra reducida cuando se presiona */
+}
         
+        .status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%; /* Hacer el punto redondo */
+    margin-left: 5px; /* Espacio entre el texto y el punto */
+}
+
+.green {
+    background-color: green; /* Color verde para el estado Online */
+}
+
+.red {
+    background-color: red; /* Color rojo para el estado Offline */
+}
+
+
         .container {
             max-width: 800px;
             margin: 0 auto;
@@ -114,12 +171,20 @@
 <script>
     // Conectar al socket
     //const socket = io('https://segubackend.com/monitoring/'); 
-  const backend = 'https://segubackend.com/monitoring/';
-    //const backend = 'http://localhost:9000/monitoring';
+  //const backend = 'https://segubackend.com/monitoring/';
+    let service_segubackend = false, service_segucomunications = false, service_nginx= false, service_database = false;
+   
+
+    const backend = 'http://localhost:9000/';
     const socket = io(backend, {
       transports: ['websocket'],
       autoConnect: true,
     });
+
+    document.addEventListener('DOMContentLoaded', (event) => {
+            getStatusService();
+        });
+
 
     socket.on('connect', () => {
         console.log(`Conectado al servidor: ${backend}`);
@@ -184,6 +249,252 @@
             gpuList.appendChild(listItem);
         });
     });
+
+    const restartServerButton = () => {
+    fetch(`${backend}reboot/confirm/server`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ confirm: true }),
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log('Reinicio confirmado');
+            Swal.fire({
+                icon: 'success',
+                title: 'Reinicio confirmado',
+                text: 'El servidor se reiniciará en unos momentos',
+            }).then(() => {
+                // Recargar la página después de que el usuario cierre la alerta
+                window.location.reload();
+            });
+        } else {
+            console.error('Error al confirmar el reinicio');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al confirmar el reinicio',
+                text: 'Ocurrió un error al confirmar el reinicio del servidor',
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error al confirmar el reinicio', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al confirmar el reinicio',
+            text: 'Ocurrió un error al confirmar el reinicio del servidor',
+        });
+    });
+};
+
+
+const restartSegucomunication = () => {
+    fetch(`${backend}service/confirm/restart/segucomunications`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ confirm: true }),
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log('Reinicio confirmado');
+            Swal.fire({
+                icon: 'success',
+                title: 'Reinicio exitoso',
+                text: 'El servicio se reiniciará en unos momentos',
+            }).then(() => {
+                // Recargar la página después de que el usuario cierre la alerta
+                window.location.reload();
+            });
+        } else {
+            console.error('Error al confirmar el reinicio');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al confirmar el reinicio',
+                text: 'Ocurrió un error al confirmar el reinicio del servicio',
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error al confirmar el reinicio', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al confirmar el reinicio',
+            text: 'Ocurrió un error al confirmar el reinicio del servicio',
+        });
+    });
+};
+
+const restartNginxx = () => {
+    fetch(`${backend}service/confirm/restart/nginx`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ confirm: true }),
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log('Reinicio confirmado');
+            Swal.fire({
+                icon: 'success',
+                title: 'Reinicio exitoso',
+                text: 'El servicio se reiniciará en unos momentos',
+            }).then(() => {
+                // Recargar la página después de que el usuario cierre la alerta
+                window.location.reload();
+            });
+        } else {
+            console.error('Error al confirmar el reinicio');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al confirmar el reinicio',
+                text: 'Ocurrió un error al confirmar el reinicio del servidor',
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error al confirmar el reinicio', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al confirmar el reinicio',
+            text: 'Ocurrió un error al confirmar el reinicio del servidor',
+        });
+    });
+};
+
+const restartDatabase = () => {
+    fetch(`${backend}service/confirm/restart/database`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ confirm: true }),
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log('Reinicio confirmado');
+            Swal.fire({
+                icon: 'success',
+                title: 'Reinicio exitoso',
+                text: 'El servicio de la base de datos se reiniciará en unos momentos',
+            }).then(() => {
+                // Recargar la página después de que el usuario cierre la alerta
+                window.location.reload();
+            });
+        } else {
+            console.error('Error al confirmar el reinicio');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al confirmar el reinicio',
+                text: 'Ocurrió un error al confirmar el reinicio del servicio de la base de datos',
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error al confirmar el reinicio', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al confirmar el reinicio',
+            text: 'Ocurrió un error al confirmar el reinicio del servicio de la base de datos',
+        });
+    });
+};
+
+
+
+//get status service
+// Función para obtener el estado de los servicios
+const getStatusService = async () => {
+    console.log("Segucom Backend:", service_segubackend);
+    console.log("Segucomunications:", service_segucomunications);
+    console.log("NGINX:", service_nginx);
+    console.log("Database:", service_database);
+    
+  try {
+    // Fetch para el servicio segucom-backend
+    const backendStatus = await fetch(`${backend}service/confirm/status/segucom-backend`);
+    service_segubackend = backendStatus.status === 200;
+
+    // Fetch para el servicio segucomunications
+    const segucomunicationsStatus = await fetch(`${backend}service/confirm/status/segucomunications`);
+    service_segucomunications = segucomunicationsStatus.status === 200;
+
+    // Fetch para el servicio nginx
+    const nginxStatus = await fetch(`${backend}service/confirm/status/nginx`);
+    service_nginx = nginxStatus.status === 200;
+
+    // Fetch para el servicio database
+    const databaseStatus = await fetch(`${backend}service/confirm/status/database`);
+    service_database = databaseStatus.status === 200;
+
+     // Actualizar los estados en el HTML
+    document.getElementById('segucomBackendStatus').innerHTML = service_segubackend ? 'Online <span class="status-dot green"></span>' : 'Offline <span class="status-dot red"></span>';
+    document.getElementById('segucomunicationsStatus').innerHTML = service_segucomunications ? 'Online <span class="status-dot green"></span>' : 'Offline <span class="status-dot red"></span>';
+    document.getElementById('nginxStatus').innerHTML = service_nginx ? 'Online <span class="status-dot green"></span>' : 'Offline <span class="status-dot red"></span>';
+    document.getElementById('databaseStatus').innerHTML = service_database ? 'Online <span class="status-dot green"></span>' : 'Offline <span class="status-dot red"></span>';
+    
+
+    // Mostramos el resultado
+    console.log("Segucom Backend:", service_segubackend);
+    console.log("Segucomunications:", service_segucomunications);
+    console.log("NGINX:", service_nginx);
+    console.log("Database:", service_database);
+    
+  } catch (error) {
+    console.error("Error al obtener el estado de los servicios:", error);
+  }
+
+  document.addEventListener('DOMContentLoaded', (event) => {
+            getStatusService();
+        });
+
+};
+
+
+
+const restartBackend = () => {
+    fetch(`${backend}service/confirm/restart/segucom-backend`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ confirm: true }),
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log('Reinicio confirmado');
+            Swal.fire({
+                icon: 'success',
+                title: 'Reinicio exitoso',
+                text: 'El servicio del backend se reiniciará en unos momentos',
+            }).then(() => {
+                // Recargar la página después de cerrar la alerta
+                window.location.reload();
+            });
+        } else {
+            console.error('Error al confirmar el reinicio');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al confirmar el reinicio',
+                text: 'Ocurrió un error al confirmar el reinicio del servicio del backend',
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error al confirmar el reinicio', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al confirmar el reinicio',
+            text: 'Ocurrió un error al confirmar el reinicio del servicio del backend',
+        });
+    });
+};
+
+
+
 </script>
 
 </head>
@@ -227,12 +538,35 @@
             <h3>RX: <span id="networkRX">0 KB/s</span></h3>
             <h3>TX: <span id="networkTX">0 KB/s</span></h3>
         </div>
+        
+        <div class="card">
+            <h2>Service Control</h2>
+            
+            <!-- Segucom Backend -->
+            <p>Segucom backend</p>
+            <p>Status: <span id="segucomBackendStatus"></span></p>
+            <button onclick="restartBackend()">Reiniciar Segucom Backend</button>
+            
+            <!-- Segucomunications -->
+            <p>Segucomunications</p>
+            <p>Status: <span id="segucomunicationsStatus"></span></p>
+            <button onclick="restartSegucomunication()">Reiniciar Segucomunications</button>
+            
+            <!-- NGINX -->
+            <p>NGINX</p>
+            <p>Status: <span id="nginxStatus"></span></p>
+            <button onclick="restartNginxx()">Reiniciar NGINX</button>
+            
+            <!-- Database -->
+            <p>MySQL Service</p>
+            <p>Status: <span id="databaseStatus"></span></p>
+            <button onclick="restartDatabase()">Reiniciar MySQL</button>
+        </div>
+        
+        
         <div class="card">
             <h2>Server Control</h2>
-            <button id="restartServer">Reiniciar servidor</button>
-            <button id="restartServer">Reiniciar Segucom Mensajería Service</button>
-            <button id="restartServer">Reiniciar Segucom backend</button>
-            <button id="restartServer">Reiniciar MySQL service</button>
+            <button id="restartServer" onclick="restartServerButton()">Reiniciar servidor</button>
         </div>
         
     </div>

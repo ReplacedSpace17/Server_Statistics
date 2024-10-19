@@ -1,87 +1,14 @@
+// index.js
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
-const os = require('os-utils');
-const si = require('systeminformation');
 const cors = require('cors');
 const session = require('express-session');
 const bodyParser = require('body-parser');
-const { expressCspHeader, INLINE, NONE, SELF } = require('express-csp-header');
+const { expressCspHeader, NONE, SELF } = require('express-csp-header');
+const { exec } = require('child_process');
 
-class Server {
-  constructor() {
-    this.cpuUsage = 0;
-    this.freeMem = 0;
-    this.totalMem = 0;
-    this.diskFree = 0;
-    this.diskTotal = 0;
-    this.diskUsed = 0;
-    this.networkSpeed = { rx: 0, tx: 0 };
-    this.gpuInfo = [];
-    this.topProcesses = [];
-  }
-
-  async updateStats() {
-    this.cpuUsage = await this.getCpuUsage();
-    this.freeMem = os.freemem();
-    this.totalMem = os.totalmem();
-    const diskInfo = await this.getDiskInfo();
-    this.diskFree = diskInfo.free;
-    this.diskTotal = diskInfo.total;
-    this.diskUsed = diskInfo.used; 
-    this.networkSpeed = await this.getNetworkSpeed();
-    this.gpuInfo = await this.getGpuInfo(); 
-    this.topProcesses = await this.getTopProcesses(); 
-  }
-
-  getCpuUsage() {
-    return new Promise((resolve) => {
-      os.cpuUsage((value) => {
-        resolve(value);
-      });
-    });
-  }
-
-  async getDiskInfo() {
-    const data = await si.fsSize();
-    const disk = data[1];
-    const free = disk.available / (1024 * 1024 * 1024); 
-    const total = disk.size / (1024 * 1024 * 1024); 
-    const used = disk.used / (1024 * 1024 * 1024); 
-    return { free, total, used };
-  }
-
-  async getNetworkSpeed() {
-    const networkStats = await si.networkStats();
-    return {
-      rx: networkStats[0].rx_sec,
-      tx: networkStats[0].tx_sec
-    };
-  }
-
-  async getGpuInfo() {
-    const gpuData = await si.graphics();
-    return gpuData.controllers.map(gpu => ({
-      model: gpu.model,
-      vendor: gpu.vendor,
-      memoryTotal: gpu.memoryTotal ? gpu.memoryTotal + ' MB' : 'N/A',
-      temperature: gpu.temperatureGpu ? gpu.temperatureGpu + '°C' : 'N/A'
-    }));
-  }
-
-  async getTopProcesses() {
-    const processData = await si.processes();
-    return processData.list
-      .sort((a, b) => b.cpu - a.cpu)
-      .slice(0, 5)
-      .map(proc => ({
-        name: proc.name,
-        pid: proc.pid,
-        cpu: proc.cpu.toFixed(2), 
-        mem: (proc.memRss / (1024 * 1024)).toFixed(2)
-      }));
-  }
-}
+const Server = require('./Server'); // Importar la clase Server
 
 const app = express();
 const server = http.createServer(app);
@@ -97,10 +24,10 @@ const serverStats = new Server();
 
 // Middleware para sesiones
 app.use(session({
-  secret: 'mySecretKey', // Clave para firmar la sesión
+  secret: 'mySecretKey',
   resave: false,
   saveUninitialized: true,
-  cookie: { maxAge: 300000 } // Sesión de 5 minutos (300,000 ms)
+  cookie: { maxAge: 300000 }
 }));
 
 // Middleware para parsear body de requests
@@ -110,18 +37,18 @@ app.use(bodyParser.json());
 // Configuración de encabezados CSP
 app.use(expressCspHeader({ 
   policies: { 
-      'default-src': [expressCspHeader.NONE], 
-      'img-src': [expressCspHeader.SELF], 
-      'script-src': [expressCspHeader.SELF],
-      'style-src': [expressCspHeader.SELF],
-      'object-src': [expressCspHeader.NONE],
-      'frame-src': [expressCspHeader.NONE],
-      'base-uri': [expressCspHeader.NONE],
-      'form-action': [expressCspHeader.NONE],
-      'frame-ancestors': [expressCspHeader.NONE],
-      'manifest-src': [expressCspHeader.NONE],
-      'media-src': [expressCspHeader.NONE],
-      'worker-src': [expressCspHeader.NONE]
+    'default-src': [NONE], 
+    'img-src': [SELF], 
+    'script-src': [SELF],
+    'style-src': [SELF],
+    'object-src': [NONE],
+    'frame-src': [NONE],
+    'base-uri': [NONE],
+    'form-action': [NONE],
+    'frame-ancestors': [NONE],
+    'manifest-src': [NONE],
+    'media-src': [NONE],
+    'worker-src': [NONE]
   } 
 }));
 
@@ -133,50 +60,28 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-const monitoringNamespace = io.of('/monitoring');
-
-monitoringNamespace.on('connection', (socket) => {
-    console.log('New connection to /monitoring');
-      // Enviar estadísticas al cliente cada 2 segundos
-setInterval(async () => {
-  await serverStats.updateStats();
-  monitoringNamespace.emit('serverStats', serverStats);
-}, 2000);
-    // Maneja eventos aquí
-});
-
 io.on('connection', (socket) => {
   console.log('Un cliente se ha conectado');
   socket.on('disconnect', () => {
     console.log('Un cliente se ha desconectado');
   });
 
-
-
   // Enviar estadísticas al cliente cada 2 segundos
-setInterval(async () => {
-  await serverStats.updateStats();
-  io.emit('serverStats', serverStats);
-}, 2000);
+  setInterval(async () => {
+    await serverStats.updateStats();
+    io.emit('serverStats', serverStats);
+   // console.log(serverStats);
+  }, 2000);
 });
 
 // Página de login
 app.get('/', (req, res) => {
   res.send('Hola, bienvenido a la página de login');
-  /*
-  if (req.session.loggedIn) {
-    res.redirect('/stats');
-  } else {
-    res.sendFile(__dirname + '/public/login.html');
-  }
-    */
 });
 
 // Endpoint para manejar login
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-
-  // Credenciales estáticas, cámbialas según sea necesario
   const validUsername = 'rs17';
   const validPassword = 'Javier117';
 
@@ -190,12 +95,138 @@ app.post('/login', (req, res) => {
 
 // Endpoint protegido que muestra las estadísticas
 app.get('/stats', (req, res) => {
-  
-    res.sendFile(__dirname + '/public/index.html');
-  
+  res.sendFile(__dirname + '/public/index.html');
 });
 
+//reinicio de servidor
+app.post('/reboot/confirm/server', (req, res) => {
+  // Envía una respuesta inmediata
+  res.status(200).send('Servidor reiniciándose...');
+  // Luego ejecuta el comando de reinicio
+  exec('sudo reboot', (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error al ejecutar reboot: ${error.message}`);
+      // Aquí podrías hacer un logging adicional si es necesario
+      return; // No enviamos una respuesta aquí, ya que ya se envió
+    }
 
+    if (stderr) {
+      console.error(`stderr: ${stderr}`);
+      // Similarmente, puedes hacer logging, pero no enviamos respuesta
+      return;
+    }
+
+    console.log(`stdout: ${stdout}`);
+    // No se puede enviar una respuesta porque el servidor ya ha comenzado a reiniciarse
+  });
+});
+
+// endpointd para reiniciar service:
+// Función para manejar la ejecución de comandos de reinicio
+function executeCommand(command, res) {
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error al ejecutar el comando: ${error.message}`);
+      res.status(500).send(`Error al ejecutar el comando: ${error.message}`);
+      return;
+    }
+
+    if (stderr) {
+      console.error(`stderr: ${stderr}`);
+      res.status(500).send(`Error: ${stderr}`);
+      return;
+    }
+
+    console.log(`stdout: ${stdout}`);
+    res.status(200).send(`Comando ejecutado con éxito: ${stdout}`);
+  });
+}
+
+// Endpoint genérico para reiniciar servicios
+app.post('/service/confirm/restart/:NAME', (req, res) => {
+  const serviceName = req.params.NAME;
+
+  let command = '';
+  switch (serviceName) {
+    case 'segucom-backend':
+      command = 'sudo systemctl restart backendsegucom.service';
+      break;
+    case 'segucomunications':
+      command = 'sudo systemctl restart segucomunication';
+      break;
+    case 'nginx':
+      command = 'sudo systemctl restart nginx';
+      break;
+    case 'database':
+      command = 'sudo systemctl restart mysqld.service';
+      break;
+    default:
+      res.status(400).send('Servicio no válido');
+      return;
+  }
+
+  // Ejecuta el comando correspondiente
+  executeCommand(command, res);
+});
+
+// Función para manejar la ejecución de comandos de estado
+function getServiceStatus(service, res) {
+  const command = `sudo systemctl status ${service}`;
+
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      // Si el servicio está detenido, `systemctl` genera un error, pero verificamos si es "inactive" para devolver 503
+      if (stdout.includes('Active: inactive') || stderr.includes('inactive (dead)')) {
+        console.log(`El servicio ${service} está detenido`);
+        res.status(503).send(`El servicio ${service} está detenido.`);
+      } else if (stderr.includes('Loaded: not-found')) {
+        console.log(`El servicio ${service} no existe`);
+        res.status(404).send(`El servicio ${service} no existe.`);
+      } else {
+        // Si es otro tipo de error no relacionado con el estado del servicio
+        console.error(`Error al ejecutar el comando: ${error.message}`);
+        res.status(500).send(`Error al ejecutar el comando: ${error.message}`);
+      }
+      return;
+    }
+
+    // Si no hay error, verificamos si el servicio está corriendo
+    if (stdout.includes('Active: active (running)')) {
+      console.log(`El servicio ${service} está en ejecución`);
+      res.status(200).send(`El servicio ${service} está en ejecución.`);
+    } else {
+      console.log(`Estado desconocido del servicio ${service}`);
+      res.status(500).send(`Estado desconocido del servicio ${service}.`);
+    }
+  });
+}
+
+// Endpoint para obtener el estado de un servicio
+app.get('/service/confirm/status/:NAME', (req, res) => {
+  const serviceName = req.params.NAME;
+
+  let service = '';
+  switch (serviceName) {
+    case 'segucom-backend':
+      service = 'backendsegucom.service';
+      break;
+    case 'segucomunications':
+      service = 'segucomunication';
+      break;
+    case 'nginx':
+      service = 'nginx';
+      break;
+    case 'database':
+      service = 'mysqld.service';
+      break;
+    default:
+      res.status(400).send('Servicio no válido');
+      return;
+  }
+
+  // Obtiene el estado del servicio correspondiente
+  getServiceStatus(service, res);
+});
 
 const PORT = 9000;
 server.listen(PORT, () => {
