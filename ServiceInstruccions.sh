@@ -36,15 +36,15 @@ sudo systemctl status serverStatistics
 
 
 sudo visudo
-rs17 ALL=(ALL) NOPASSWD: /sbin/reboot
-rs17 ALL=(ALL) NOPASSWD: /bin/systemctl restart backendsegucom.service
-rs17 ALL=(ALL) NOPASSWD: /bin/systemctl restart segucomunication
-rs17 ALL=(ALL) NOPASSWD: /bin/systemctl restart nginx
-rs17 ALL=(ALL) NOPASSWD: /bin/systemctl restart mysqld.service
-rs17 ALL=(ALL) NOPASSWD: /bin/systemctl status backendsegucom.service
-rs17 ALL=(ALL) NOPASSWD: /bin/systemctl status segucomunication
-rs17 ALL=(ALL) NOPASSWD: /bin/systemctl status nginx
-rs17 ALL=(ALL) NOPASSWD: /bin/systemctl status mysqld.service
+sermex-segu ALL=(ALL) NOPASSWD: /sbin/reboot
+sermex-segu ALL=(ALL) NOPASSWD: /bin/systemctl restart backendsegucom.service
+sermex-segu ALL=(ALL) NOPASSWD: /bin/systemctl restart segucomunication
+sermex-segu ALL=(ALL) NOPASSWD: /bin/systemctl restart nginx
+sermex-segu ALL=(ALL) NOPASSWD: /bin/systemctl restart mysqld.service
+sermex-segu ALL=(ALL) NOPASSWD: /bin/systemctl status backendsegucom.service
+sermex-segu ALL=(ALL) NOPASSWD: /bin/systemctl status segucomunication
+sermex-segu ALL=(ALL) NOPASSWD: /bin/systemctl status nginx
+sermex-segu ALL=(ALL) NOPASSWD: /bin/systemctl status mysqld.service
 
 //gets
 http://localhost:9000/service/confirm/status/segucom-backend
